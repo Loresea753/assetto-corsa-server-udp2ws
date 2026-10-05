@@ -40,6 +40,7 @@ class ACSP extends EventEmitter {
 
   onSockListening (details) {
     this.emit('udp_listening')
+    this.enableEnhancedReporting()
   }
 
   onSockError (err) {
@@ -78,6 +79,14 @@ class ACSP extends EventEmitter {
         return this.onCarInfo(buf)
       case types.CAR_UPDATE:
         return this.onCarUpdate(buf)
+      case types.SPLIT_COMPLETED:
+        return this.onSplitCompleted(buf)
+      case types.TYRE_CHANGE:
+        return this.onTyreChange(buf)
+      case types.PING:
+        return this.onPing(buf)
+      case types.SPEED_TRAP_HIT:
+        return this.onSpeedTrapHit(buf)
       case types.CLIENT_EVENT:
         return this.onClientEvent(buf)
       default:
@@ -124,6 +133,7 @@ class ACSP extends EventEmitter {
     }
 
     if (id === types.NEW_SESSION) {
+      this.enableEnhancedReporting()
       return this.emit('new_session', sessionInfo)
     }
 
@@ -196,6 +206,46 @@ class ACSP extends EventEmitter {
     lapInfo.grip_level = buf.readFloatLE()
 
     this.emit('lap_completed', lapInfo)
+  }
+
+  onSplitCompleted (buf) {
+    const splitInfo = {
+      car_id: buf.readUInt8(),
+      sector_index: buf.readUInt8(),
+      sector_time: buf.readUInt32LE(),
+      num_cuts: buf.readUInt8()
+    }
+
+    this.emit('split_completed', splitInfo)
+  }
+
+  onTyreChange (buf) {
+    const tyreInfo = {
+      car_id: buf.readUInt8(),
+      tyre: this.readString(buf)
+    }
+
+    this.emit('tyre_change', tyreInfo)
+  }
+
+  onPing (buf) {
+    const pingInfo = {
+      plugin_time: Number(buf.readBigInt64LE()),
+      server_time: Number(buf.readBigInt64LE())
+    }
+
+    this.emit('pong', pingInfo)
+  }
+
+  onSpeedTrapHit (buf) {
+    const trapInfo = {
+      car_id: buf.readUInt8(),
+      trap_index: buf.readUInt8(),
+      timestamp: Number(buf.readBigInt64LE()),
+      speed: buf.readDoubleLE()
+    }
+
+    this.emit('speed_trap_hit', trapInfo)
   }
 
   onCarInfo (buf) {
@@ -352,6 +402,21 @@ class ACSP extends EventEmitter {
     const buf = SmartBuffer.fromSize(2)
     buf.writeUInt8(types.KICK_USER, 0)
     buf.writeUInt8(id, 1)
+
+    this.send(buf.toBuffer())
+  }
+
+  enableEnhancedReporting () {
+    const buf = SmartBuffer.fromSize(1)
+    buf.writeUInt8(types.ENABLE_ENHANCED_REPORTING, 0)
+
+    this.send(buf.toBuffer())
+  }
+
+  requestPing (pluginTime = Date.now()) {
+    const buf = SmartBuffer.fromSize(9)
+    buf.writeUInt8(types.REQUEST_PING, 0)
+    buf.writeBigInt64LE(BigInt(pluginTime), 1)
 
     this.send(buf.toBuffer())
   }

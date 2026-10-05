@@ -322,6 +322,8 @@ socket.on('new_session', (data) => { ... })
 
 A new session has been loaded. (Practice, Qualify...)
 
+When udp2ws starts up, it also calls `enableEnhancedReporting` automatically so the server pushes extra detail events (such as `split_completed`), even if udp2ws started after the AC server.
+
 #### Definition
 
 - `version`. **Integer**. Protocol Version.
@@ -357,6 +359,55 @@ Same as `new_session` event.
 
 ---
 
+### Speed trap hit
+
+```js
+socket.on('speed_trap_hit', (data) => { ... })
+```
+
+A driver hit a speed trap. Requires ACSM v2.4.7+ and enhanced reporting.
+
+#### Definition
+
+- `car_id`. **Integer**. Car ID
+- `trap_index`. **Integer**. Speed trap index (from 0).
+- `timestamp`. **Integer**. Unix time in milliseconds.
+- `speed`. **Float**. Speed at the trap.
+
+---
+
+### Split completed
+
+```js
+socket.on('split_completed', (data) => { ... })
+```
+
+A driver completed a sector/split. Requires ACSM and enhanced reporting.
+
+#### Definition
+
+- `car_id`. **Integer**. Car ID
+- `sector_index`. **Integer**. Sector index just completed (from 0).
+- `sector_time`. **Integer**. Sector time.
+- `num_cuts`. **Integer**. Cuts in the sector.
+
+---
+
+### Tyre change
+
+```js
+socket.on('tyre_change', (data) => { ... })
+```
+
+A car changed tyre (also reported on every pit entry). Requires ACSM and enhanced reporting.
+
+#### Definition
+
+- `car_id`. **Integer**. Car ID
+- `tyre`. **String**. Current tyre.
+
+---
+
 ### Version
 
 ```js
@@ -366,6 +417,21 @@ socket.on('version', (data) => { ... })
 #### Definition
 
 - `version`. **Integer**. Protocol version.
+
+---
+
+### Pong
+
+```js
+socket.on('pong', (data) => { ... })
+```
+
+Response to the `request_ping` command. Does not require enhanced reporting.
+
+#### Definition
+
+- `plugin_time`. **Integer**. Time the ping was sent (unix ms), returned unchanged.
+- `server_time`. **Integer**. Server time on receipt (unix ms).
 
 ---
 
@@ -446,6 +512,26 @@ socket.emit('next_session')
 Loads the next session.
 
 If `password` is set in `udp2ws.ini` file, this command will require to [authenticate](#authentication) first.
+
+---
+
+### Enable enhanced reporting
+
+```js
+socket.emit('enable_enhanced_reporting')
+```
+
+Asks an ACSM server to send the extra events (`split_completed`, `tyre_change`, `speed_trap_hit`). Sent automatically on startup and on each new session.
+
+---
+
+### Request ping
+
+```js
+socket.emit('request_ping', pluginTime)
+```
+
+Fires the `pong` event. `pluginTime` is optional (unix ms, defaults to now).
 
 ---
 

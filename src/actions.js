@@ -1,7 +1,9 @@
 const actions = [
   { name: 'get_car_info', command: 'getCarInfo' },
   { name: 'get_session_info', command: 'getSessionInfo' },
-  { name: 'enable_realtime_report', command: 'enableRealtimeReport' }
+  { name: 'enable_realtime_report', command: 'enableRealtimeReport' },
+  { name: 'enable_enhanced_reporting', command: 'enableEnhancedReporting' },
+  { name: 'request_ping', command: 'requestPing' }
 ]
 
 const adminActions = [
