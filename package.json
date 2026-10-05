@@ -4,7 +4,7 @@
   "description": "UDP Relay and WebSockets Proxy for Assetto Corsa",
   "bin": "src/udp2ws.js",
   "scripts": {
-    "build": "bin/build.sh",
+    "build": "bash bin/build.sh",
     "start": "babel-node src/udp2ws.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

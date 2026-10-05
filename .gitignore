@@ -7,3 +7,4 @@ build
 lib
 npm-debug.log
 udp2ws.ini
+.env
